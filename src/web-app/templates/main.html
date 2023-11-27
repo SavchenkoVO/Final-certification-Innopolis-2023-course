@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<header>
+    <h1 id="title">Система предсказания пластового давления нефтегазового месторождения Ханты-Мансийского автономного
+        округа,
+        Западная Сибирь</h1>
+</header>
+<aside>
+    <div class="side_links">
+        <p>Динамика пластового давления по скважинам месторождения:</p>
+        {% for pred in predictions %}
+        <a href="#card_{{pred['idx']}}">Скважина #{{pred['idx']}}</a>
+        {% endfor %}
+    </div>
+</aside>
+<main>
+    <div class="main_image">
+        <!-- kavo -->
+        <img src="{{url_for('static', filename='images/230321.jpg')}}">
+    </div>
+    <section class="predictions">
+        <h2 class="section_title">Динамика пластового давления по скважинам месторождения</h2>
+        {% for pred in predictions %}
+        <div class="card">
+            <p class="card__title" id="card_{{ pred['idx']}}">
+                Скважина #{{ pred['idx']}}
+            </p>
+            <div class="card__content">
+                <div id="cart__plot_{{ pred['idx']}}" class="card__plot"></div>
+            </div>
+        </div>
+        <script>
+            var idx = {{ pred['idx']}};
+            var first_10 = {{ pred['first_10']}};
+            var predicted_next_20 = {{ pred['predicted_next_20'] }};
+            var real_next_20 = {{ pred['real_next_20'] }};
+
+            var input = {
+                x: Array.from({ length: first_10.length }, (_, i) => i),
+                y: first_10,
+                name: 'Input data',
+                mode: 'lines+markers',
+                type: 'scatter',
+            }
+
+            var output = {
+                x: Array.from({ length: predicted_next_20.length }, (_, i) => i + first_10.length),
+                y: predicted_next_20,
+                name: 'Predicted data',
+                mode: 'lines+markers',
+                type: 'scatter',
+            }
+
+            var real = {
+                x: Array.from({ length: real_next_20.length }, (_, i) => i + first_10.length),
+                y: real_next_20,
+                name: 'Real data',
+                mode: 'lines+markers',
+                type: 'scatter',
+            }
+
+            var layout = {
+                yaxis: {
+                    dtick: 5,
+                    title: 'Reservoire pressure',
+                },
+                xaxis: {
+                    title: 'Days',
+                },
+                margin: {
+                    t: 0
+                },
+            }
+            Plotly.newPlot(document.getElementById('cart__plot_{{ pred['idx']}}'), [input, output, real], layout);
+        </script>
+        {% endfor %}
+    </section>
+</main>
+{% endblock %}
